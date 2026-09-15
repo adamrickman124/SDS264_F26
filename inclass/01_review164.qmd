@@ -12,6 +12,11 @@ You can download this .qmd file from [here](https://github.com/proback/264_fall_
 ### Determinants of COVID vaccination rates
 
 ```{r}
+install.packages("tidyverse")
+install.packages("credentials")
+```
+
+```{r}
 #| include: false
 
 library(tidyverse)
@@ -68,14 +73,36 @@ A recent Stat 272 project examined determinants of covid vaccination rates at th
 
 a) A scatterplot with points and smoothers colored by state.  Make sure the legend is ordered in a meaningful way, and include good labels on your axes and your legend.  Also leave off the error bars from your smoothers.
 
+```{r}
+vaccine_data |>
+  filter(state %in% c("Minnesota", "Wisconsin", "North Dakota", "South Dakota", "Iowa")) |>
+  ggplot(aes(x = perc_Biden, y = perc_complete_vac, color = fct_reorder2(state, perc_Biden, perc_complete_vac))) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Percentage of Biden Voters vs. Percentage Vaccinated by State",
+       x = "Percentage of Biden Voters",
+       y = "Percentage Vaccinated",
+       color = "State")
+```
+
 b) One plot per state containing a scatterplot and a smoother.
+```{r}
+vaccine_data |>
+  filter(state %in% c("Minnesota", "Wisconsin", "North Dakota", "South Dakota", "Iowa")) |>
+  ggplot(aes(x = perc_Biden, y = perc_complete_vac)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~state)
+```
 
 Describe which plot you prefer and why.  What can you learn from your preferred plot?
+**The second plot because it is easier to see. Only benefit to the first one is that it is easier to compare (but it is messier)**
 
 
 2. We wish to compare the proportions of counties in each region with median household income above the national median ($69,560).
 
 a) Fill in the blanks below to produce a segmented bar plot with regions ordered from highest proportion above the median to lowest.
+
 
 b) Create a table of proportions by region to illustrate that your bar plot in (a) is in the correct order (you should find two regions that are *really* close when you just try to eyeball differences).
 
@@ -124,6 +151,11 @@ d) Plot the relationship between log population and percent vaccinated using sep
 
 
 4. Produce 3 different plots for illustrating the relationship between the rural_urban_code and percent vaccinated.  Hint: you can sometimes turn numeric variables into categorical variables for plotting purposes (e.g. `as.factor()`, `ifelse()`).
+
+```{r}
+vaccine_data_rsu <- vaccine_data |>
+  mutate(rural = ifelse(rural_urban_code < 5, "More Urban", "More Rural"))
+```
 
 State your favorite plot, why you like it better than the other two, and what you can learn from your favorite plot.  Create an alt text description of your favorite plot, using the Four Ingredient Model.  See [this link](https://drive.google.com/file/d/1BuEbL6vETBcFULmtlrwwZBUYhdEg0Zqb/view?usp=sharing) for reminders and references about alt text.
 
