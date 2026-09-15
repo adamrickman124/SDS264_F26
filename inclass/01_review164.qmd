@@ -155,6 +155,19 @@ d) Plot the relationship between log population and percent vaccinated using sep
 ```{r}
 vaccine_data_rsu <- vaccine_data |>
   mutate(rural = ifelse(rural_urban_code < 5, "More Urban", "More Rural"))
+
+vaccine_data_rsu |>
+  ggplot(aes(x = rural_urban_code, y = perc_complete_vac, color = rural_urban_code)) +
+  geom_jitter() +
+  geom_smooth(method = "lm", se = FALSE)
+
+vaccine_data_rsu |>
+  ggplot(aes(x = as_factor(rural_urban_code), fill = perc_complete_vac > 50)) +
+  geom_bar(position = "fill")
+
+vaccine_data_rsu |>
+  ggplot(aes(x = rural_urban_code, y = perc_complete_vac)) +
+  geom_point()
 ```
 
 State your favorite plot, why you like it better than the other two, and what you can learn from your favorite plot.  Create an alt text description of your favorite plot, using the Four Ingredient Model.  See [this link](https://drive.google.com/file/d/1BuEbL6vETBcFULmtlrwwZBUYhdEg0Zqb/view?usp=sharing) for reminders and references about alt text.
@@ -166,15 +179,17 @@ State your favorite plot, why you like it better than the other two, and what yo
 #| eval: FALSE
 
 vaccine_data |>
-  filter(!is.na(perc_Biden)) |>
-  mutate(big_states = fct_lump(state, n = 10)) |>
-  group_by(big_states) |>
-  summarize(IQR_Biden = IQR(perc_Biden)) |>
-  mutate(big_states = fct_reorder(big_states, IQR_Biden)) |>
+  filter(!is.na(perc_Biden)) |> # removes n/a values
+  mutate(big_states = fct_lump(state, n = 10)) |> # leaves 10 states with the most counties, lumps everything else into "other"
+  group_by(big_states) |> # groups by big_states
+  summarize(IQR_Biden = IQR(perc_Biden)) |> # Finds interquartile ranges for each of the 11 groups
+  mutate(big_states = fct_reorder(big_states, IQR_Biden)) |> # orders big_states by iqr_biden
   ggplot() + 
-    geom_point(aes(x = IQR_Biden, y = big_states))
+    geom_point(aes(x = IQR_Biden, y = big_states)) # will make a scatterplot with big_states on the y-axis and IQR_Biden on the x-axis, with groups on the y-axis aligned by ascending values of IQR_Biden
+# only one data point per group
 ```
 
+This plot shows the political variation based on the interquartile range of percentage of Biden votes (so it ignores extreme values). This is a plot that details the 10 states with the most counties and all other states lumped together as one data point. We see that, of the groups detailed in this plot, Tennessee has the lowest variation while Virginia has the highest, closely followed by the "Other" group.
 
 6. In this question we will focus only on the 12 states in the Midwest (i.e. where region == "Midwest").
 
@@ -185,7 +200,34 @@ a) Create a tibble with the following information for each state.  Order states 
 - proportion of Metro counties
 - median unemployment rate 
 
+```{r}
+midwest_data <- vaccine_data |>
+  filter(region == "Midwest")
+
+midwest <- midwest_data |>
+  group_by(state) |>
+  summarize(
+    num_ruc = n_distinct(rural_urban_code),
+    pop = sum(tot_pop),
+    prop_metro = mean(metro_status == "Metro"),
+    med_ur = median(unemployment_rate_2020)
+  ) |>
+  arrange(pop)
+  
+
+midwest
+```
+
 b) Use your tibble in (a) to produce a plot of the relationship between proportion of Metro counties and median unemployment rate.  Points should be colored by the number of different `rural_urban_code`s in a state, but a single linear trend should be fit to all points.  What can you conclude from the plot?
+
+```{r}
+midwest |>
+  ggplot(aes(x = prop_metro, y = med_ur, color = num_ruc)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+We can conclude that there is a somewhat strong positive linear relationship between the proportion of Metro counties and median unemployment rate. The number of distinct urban rural codes does not seem to have much influence. There are also two obvious outliers, being around the 0.3 Metro proportion range. One exists far above the line and the other below.
 
 
 7. Generate an appropriate plot to compare vaccination rates between two subregions of the US: New England (which contains the states Maine, Vermont, New Hampshire, Massachusetts, Connecticut, Rhode Island) and the Upper Midwest (which, according to the USGS, contains the states Minnesota, Wisconsin, Michigan, Illinois, Indiana, and Iowa).  What can you conclude from your plot?
