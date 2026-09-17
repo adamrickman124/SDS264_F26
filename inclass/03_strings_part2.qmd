@@ -57,16 +57,16 @@ spot_smaller
 ```{r}
 spot_new <- spot_smaller |>
   select(title, album_release_date) |>
-  mutate(title_length = str_length(title),
-         year = str_sub(album_release_date, 1, 4),
-         title_lower = str_to_lower(title),
-         album_release_date2 = str_replace_all(album_release_date, "-", "/"))
+  mutate(title_length = str_length(title), # makes new column with the number of characters in each title
+         year = str_sub(album_release_date, 1, 4), # makes a new column that takes the first four characters of each date (which is the year)
+         title_lower = str_to_lower(title), # makes the titles lowercase
+         album_release_date2 = str_replace_all(album_release_date, "-", "/")) # replaces "-" with "/" in dates
 spot_new
          
 max_length <- max(spot_new$title_length)
 
-str_c("The longest title is", max_length, "characters long.", sep = " ")
-str_glue("The longest title is {max_length} characters long.")
+str_c("The longest title is", max_length, "characters long.", sep = " ") # finds the song with the longest title
+str_glue("The longest title is {max_length} characters long.") # also finds the song with the longest title
 ```
 
 ## Important functions for identifying strings which match
@@ -78,16 +78,16 @@ str_detect() : useful when working within a tibble
 1.  Identify the input type and output type for each of these examples:
 
 ```{r}
-str_view(spot_smaller$subgenre, "pop")
-typeof(str_view(spot_smaller$subgenre, "pop"))
-class(str_view(spot_smaller$subgenre, "pop"))
+str_view(spot_smaller$subgenre, "pop") # input: vector and string, output: vector
+typeof(str_view(spot_smaller$subgenre, "pop")) # input: vector, output: string
+class(str_view(spot_smaller$subgenre, "pop")) # input: vector, output: string
 
-str_view(spot_smaller$subgenre, "pop", match = NA)
-str_view(spot_smaller$subgenre, "pop", html = TRUE)
+str_view(spot_smaller$subgenre, "pop", match = NA) # input: string, output: vector
+str_view(spot_smaller$subgenre, "pop", html = TRUE) # input: string, output: html?
 
-str_subset(spot_smaller$subgenre, "pop")
+str_subset(spot_smaller$subgenre, "pop") # input: vector and string, output: vector of strings
 
-str_detect(spot_smaller$subgenre, "pop")
+str_detect(spot_smaller$subgenre, "pop") # input: vector and string, output: vector of bools
 ```
 
 2.  Use str_detect to print the rows of the spot_smaller tibble
