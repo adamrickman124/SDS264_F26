@@ -237,10 +237,15 @@ vaccine_data |>
 
 a) Why would the first plot produce an error?
 
+**Because mapping is only defined in the geom_point function and not in the geom_smooth function.**
+
 b) Describe the tibble `temp` created above.  What would be the dimensions?  What do rows and columns represent?
+
+**Temp is a 3 x 2 tibble with the first column listing the top 3 HR_parties with the most data points in descending order, and the second column would be var1, and would have the number of data points for each HR_party.**
 
 c) What would happen if we replaced `fct_reorder(HR_party, perc_over_65, .fun = median)` with `HR_party`?
 
+**The HR_parties would not be ordered by the median values of perc_over_65. The actual data would remain the same, but is a bit more disorganized than the current version.**
 
 10. Hypothetical R chunk #3:
 
