@@ -107,7 +107,9 @@ Try it here!
 Then scroll down for solution.
 
 ```{r}
-
+spot_smaller |>
+  mutate(album_release_year = str_sub(album_release_date, 1, 4)) |>
+  select(title, artist, album_release_year)
 ```
 
 . . . . . . . .
