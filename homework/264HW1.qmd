@@ -92,11 +92,14 @@ vaccine_data |>
   ggplot(aes(x = perc_Biden, y = perc_complete_vac)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE) +
-  facet_wrap(~state)
+  facet_wrap(~state) +
+  labs(title = "Percentage of Biden Voters vs. Percentage Vaccinated by State",
+       x = "Percentage of Biden Voters",
+       y = "Percentage Vaccinated")
 ```
 
 Describe which plot you prefer and why.  What can you learn from your preferred plot?
-**The second plot because it is easier to see. Only benefit to the first one is that it is easier to compare (but it is messier)**
+**The second plot because it is easier to see. However, one benefit to the first one is that it is easier to compare data points between states (but it is messier)**
 
 4. Produce 3 different plots for illustrating the relationship between the rural_urban_code and percent vaccinated.  Hint: you can sometimes turn numeric variables into categorical variables for plotting purposes (e.g. `as.factor()`, `ifelse()`).
 
@@ -107,19 +110,35 @@ vaccine_data_rsu <- vaccine_data |>
 vaccine_data_rsu |>
   ggplot(aes(x = rural_urban_code, y = perc_complete_vac, color = rural_urban_code)) +
   geom_jitter() +
-  geom_smooth(method = "lm", se = FALSE)
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Rural Urban Code vs. Percentage Vaccinated by State",
+       x = "Rural Urban Code",
+       y = "Percentage Vaccinated",
+       color = "Rural Urban Code")
+  
 
 vaccine_data_rsu |>
   ggplot(aes(x = as_factor(rural_urban_code), fill = perc_complete_vac > 50)) +
-  geom_bar(position = "fill")
+  geom_bar(position = "fill") +
+  labs(title = "Rural Urban Code vs. Over 50% Vaccinated",
+       x = "Rural Urban Code",
+       y = "",
+       fill = "Over 50% Vaccinated")
 
 vaccine_data_rsu |>
-  ggplot(aes(x = rural_urban_code, y = perc_complete_vac)) +
-  geom_point()
+  ggplot(aes(x = rural_urban_code, fill = perc_complete_vac > 50)) +
+  geom_bar() +
+  labs(title = "Rural Urban Code vs. Over 50% Vaccinated",
+       x = "Rural Urban Code",
+       y = "Number of Counties",
+       fill = "Over 50% Vaccinated")
 ```
 
 State your favorite plot, why you like it better than the other two, and what you can learn from your favorite plot.  Create an alt text description of your favorite plot, using the Four Ingredient Model.  See [this link](https://drive.google.com/file/d/1BuEbL6vETBcFULmtlrwwZBUYhdEg0Zqb/view?usp=sharing) for reminders and references about alt text.
 
+**My favorite plot is the first plot, because it allows users to effectively examine the spread of data points for each RUC, as well as determine the overall trend of the graph. The second plot looks nice, but we aren't able to tell that some RUCs have more or less data points. The third plot shows this, but it is much more difficult to compare values between different RUCs.**
+
+**Alt text for plot 1: This graph is a jitter plot that shows the Rural Urban Code (from 1 - 9) on the x-axis, where 1 is the most urban and 9 is the least urban, and Percentage Vaccinated on the y-axis (from 0-100%). We can see that there is a moderately strong negative relationship between the Rural Urban Code and the Percentage Vaccinated, meaning that as RUC increases, we may expect Percentage Vaccinated to decrease.**
 
 5. BEFORE running the code below, sketch the plot that will be produced by R.  AFTER running the code, describe what conclusion(s) can we draw from this plot?  
 
@@ -137,7 +156,7 @@ vaccine_data |>
 # only one data point per group
 ```
 
-This plot shows the political variation based on the interquartile range of percentage of Biden votes (so it ignores extreme values). This is a plot that details the 10 states with the most counties and all other states lumped together as one data point. We see that, of the groups detailed in this plot, Tennessee has the lowest variation while Virginia has the highest, closely followed by the "Other" group.
+**This plot shows the political variation based on the interquartile range of percentage of Biden votes (so it ignores extreme values). This is a plot that details the 10 states with the most counties and all other states lumped together as one data point. We see that, of the groups detailed in this plot, Tennessee has the lowest variation while Virginia has the highest, closely followed by the "Other" group.**
 
 6. In this question we will focus only on the 12 states in the Midwest (i.e. where region == "Midwest").
 
@@ -175,7 +194,7 @@ midwest |>
   geom_smooth(method = "lm", se = FALSE)
 ```
 
-We can conclude that there is a somewhat strong positive linear relationship between the proportion of Metro counties and median unemployment rate. The number of distinct urban rural codes does not seem to have much influence. There are also two obvious outliers, being around the 0.3 Metro proportion range. One exists far above the line and the other below.
+**We can conclude that there is a somewhat strong positive linear relationship between the proportion of Metro counties and median unemployment rate. The number of distinct urban rural codes does not seem to have much influence. There are also two obvious outliers, being around the 0.3 Metro proportion range. One exists far above the line and the other below.**
 
 
 In this next section, we consider a few variables that could have been included in our data set, but were NOT.  Thus, you won't be able to write and test code, but you nevertheless should be able to use your knowledge of the tidyverse to answer these questions.
@@ -195,7 +214,7 @@ Here are the hypothetical variables:
 
 # Hypothetical R chunk 1
 temp <- vaccine_data |>
-  mutate(new_perc_vac = ifelse(perc_complete_vac > 95, NA, perc_complete_vac),
+  mutate(new_perc_vac = ifelse(perc_complete_vac > 95, NA, perc_complete_vac), 
          MD_group = cut_number(people_per_MD, 3)) |>
   group_by(MD_group) |>
   summarise(n = n(),
