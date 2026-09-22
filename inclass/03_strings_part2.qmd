@@ -235,7 +235,7 @@ two `\\`! (e.g. `\\$`, `\\.`, etc.)
 ```{r}
 dollar = str_subset(bigspotify$track_name, "\\$")
 dollar
-dollar2 = str_remove(dollar, " \\(.*")
+dollar2 = str_remove(dollar, " \\(.*\\)")
 dollar3 = str_remove(dollar2, " with.*")
 dollar4 = str_remove(dollar3, " - feat.*")
 dollarfinal = str_subset(dollar4, "\\$")
@@ -247,7 +247,8 @@ length(dollarfinal) # 25 songs
     followed by a number).
     
 ```{r}
-dollarnumber = str_subset(dollar4, "\\$\\d")
+dollarnumber = str_subset(dollarfinal, "\\$\\d")
+dollarnumber
 length(dollarnumber) # 2 songs
 ```
 
@@ -274,12 +275,22 @@ length(dollarnumber) # 2 songs
 8.  Modify the first regular expression above to also pick up "A.A" (in
     addition to "BEYONC" and "II"). That is, pick up strings where there
     might be a period between capital letters.
+    
+```{r}
+str_subset(spot_smaller$album_name, "[A-Z]{2,}|[A-Z]\\.[A-Z]")
+```
 
 9.  Create some strings that satisfy these regular expressions and
     explain.
 
 -   `"^.*$"`
+```{r}
+stringa = "literally anything"
+```
 -   `"\{.+\}"`
+```{r}
+stringb = ""
+```
 
 10. Create regular expressions to find all `stringr::words` that:
 
