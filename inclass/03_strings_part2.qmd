@@ -83,7 +83,7 @@ typeof(str_view(spot_smaller$subgenre, "pop")) # input: vector, output: string
 class(str_view(spot_smaller$subgenre, "pop")) # input: vector, output: string
 
 str_view(spot_smaller$subgenre, "pop", match = NA) # input: string, output: vector
-str_view(spot_smaller$subgenre, "pop", html = TRUE) # input: string, output: html?
+str_view(spot_smaller$subgenre, "pop", html = TRUE) # input: string, output: list
 
 str_subset(spot_smaller$subgenre, "pop") # input: vector and string, output: vector of strings
 
@@ -93,9 +93,22 @@ str_detect(spot_smaller$subgenre, "pop") # input: vector and string, output: vec
 2.  Use str_detect to print the rows of the spot_smaller tibble
     containing songs that have "pop" in the subgenre. (i.e. make a new
     tibble with fewer rows)
+    
+```{r}
+spot_smaller |>
+  mutate(is_pop = str_detect(subgenre, "pop")) |>
+  filter(is_pop == TRUE)
+```
 
 3.  Find the mean song title length for songs with "pop" in the subgenre
     and songs without "pop" in the subgenre.
+    
+```{r}
+spot_smaller |>
+  mutate(is_pop = str_detect(subgenre, "pop")) |>
+  group_by(is_pop) |>
+  summarize(mean_title_length = mean(str_length(title)))
+```
 
 Producing a table like this would be great:
 
@@ -130,7 +143,10 @@ Producing a table like this would be SUPER great (hint: `ifelse()`):
 
 bigspotify <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-01-21/spotify_songs.csv')
 
-bigspotify
+bigspotify |>
+  mutate(is_love = str_detect(str_to_lower(track_name), "love")) |>
+  group_by(playlist_genre) |>
+  summarize(love_prop = mean(is_love, na.rm = TRUE))
 ```
 
 ## Matching patterns with regular expressions
@@ -145,13 +161,13 @@ bigspotify
 ```{r}
 # Guess the output!
 
-str_view(spot_smaller$artist, "^K")
+str_view(spot_smaller$artist, "^K") # artists starting with a capital K.
 
-str_view(spot_smaller$album_release_date, "01$")
+str_view(spot_smaller$album_release_date, "01$") # albums released on the first of a month
 
-str_view(spot_smaller$title, "^.. ")
+str_view(spot_smaller$title, "^.. ") # songs starting with any two characters and a space
 
-str_view(spot_smaller$artist, "[^A-Za-z ]")
+str_view(spot_smaller$artist, "[^A-Za-z ]") # Artists with letters and characters not featured in the uppercase and lowercase alphabets (not including spaces)
 ```
 
 5.  Given the corpus of common words in stringr::words, create regular
@@ -167,9 +183,21 @@ str_view(spot_smaller$artist, "[^A-Za-z ]")
 
 ```{r}
 # Try using str_view() or str_subset()
+str_subset(words, "^y")
+
+str_subset(words, "x$")
+
+str_subset(words, "^...$")
+
+str_subset(words, "^.......")
+
+str_subset(words, "^[aeiou]")
+
+str_subset(words, "[^e]ed$")
+
+str_subset(words, "q[^u]") # so there are no words where q is not followed by u in "words".
 
 # For example, to find words with "tion" at any point, I could use:
-str_view(words, "tion")
 str_subset(words, "tion")
 ```
 
@@ -182,9 +210,9 @@ str_subset(words, "tion")
 | `\\b` | any boundary: space, ., etc. |
 
 ```{r}
-str_view(spot_smaller$album_name, "\\d")
-str_view(spot_smaller$album_name, "\\s")
-str_view(spot_smaller$album_name, "\\b")
+#str_view(spot_smaller$album_name, "\\d")
+#str_view(spot_smaller$album_name, "\\s")
+#str_view(spot_smaller$album_name, "\\b")
 ```
 
 Here are the regular expression special characters that require an
@@ -196,13 +224,18 @@ special meaning ... but `\` is itself a special character ... so we need
 two `\\`! (e.g. `\\$`, `\\.`, etc.)
 
 ```{r}
-str_view(spot_smaller$title, "$")
-str_view(spot_smaller$title, "\\$")
+#str_view(spot_smaller$title, "$")
+#str_view(spot_smaller$title, "\\$")
 ```
 
 6.  In bigspotify, how many track_names include a `$`? Be sure you print
     the track_names you find and make sure the dollar sign is not just
     in a featured artist!
+    
+```{r}
+str_subset(bigspotify$track_name, "\\$")
+str
+```
 
 7.  In bigspotify, how many track_names include a dollar amount (a `$`
     followed by a number).
