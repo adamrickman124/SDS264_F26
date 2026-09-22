@@ -233,12 +233,23 @@ two `\\`! (e.g. `\\$`, `\\.`, etc.)
     in a featured artist!
     
 ```{r}
-str_subset(bigspotify$track_name, "\\$")
-str
+dollar = str_subset(bigspotify$track_name, "\\$")
+dollar
+dollar2 = str_remove(dollar, " \\(.*")
+dollar3 = str_remove(dollar2, " with.*")
+dollar4 = str_remove(dollar3, " - feat.*")
+dollarfinal = str_subset(dollar4, "\\$")
+dollarfinal
+length(dollarfinal) # 25 songs
 ```
 
 7.  In bigspotify, how many track_names include a dollar amount (a `$`
     followed by a number).
+    
+```{r}
+dollarnumber = str_subset(dollar4, "\\$\\d")
+length(dollarnumber) # 2 songs
+```
 
 ## Repetition
 
@@ -253,9 +264,9 @@ str
 | `{n,m}` | between n and m times |
 
 ```{r}
-str_view(spot_smaller$album_name, "[A-Z]{2,}")
+#str_view(spot_smaller$album_name, "[A-Z]{2,}")
 
-str_view(spot_smaller$album_release_date, "\\d{4}-\\d{2}")
+#str_view(spot_smaller$album_release_date, "\\d{4}-\\d{2}")
 ```
 
 **Use at least 1 repetition symbol when solving 8-10 below**
