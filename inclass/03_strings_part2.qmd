@@ -234,11 +234,7 @@ two `\\`! (e.g. `\\$`, `\\.`, etc.)
     
 ```{r}
 dollar = str_subset(bigspotify$track_name, "\\$")
-dollar
-dollar2 = str_remove(dollar, " \\(.*\\)")
-dollar3 = str_remove(dollar2, " with.*")
-dollar4 = str_remove(dollar3, " - feat.*")
-dollarfinal = str_subset(dollar4, "\\$")
+dollarfinal = str_subset(str_remove(dollar, " \\(.*\\)| with.*| - feat.*"), "\\$")
 dollarfinal
 length(dollarfinal) # 25 songs
 ```
@@ -286,16 +282,26 @@ str_subset(spot_smaller$album_name, "[A-Z]{2,}|[A-Z]\\.[A-Z]")
 -   `"^.*$"`
 ```{r}
 stringa = "literally anything"
+str_detect(stringa, "^.*$")
 ```
 -   `"\{.+\}"`
 ```{r}
-stringb = ""
+stringb = "{anything with one or more characters inside curly brackets}. there can be more outside the brackets as well"
+str_detect(stringb, "\\{.+\\}")
 ```
 
 10. Create regular expressions to find all `stringr::words` that:
 
 -   Start with three consonants.
+`"^[^aeiou]{3}"`
+```{r}
+str_subset(words, "^[^aeiou]{3}")
+```
 -   Have two or more vowel-consonant pairs in a row.
+`"([aeiou][^aeiou]){2,}"`
+```{r}
+str_view(words, "([aeiou][^aeiou]){2,}")
+```
 
 ## Useful functions for handling patterns
 
@@ -316,6 +322,11 @@ spot_smaller |>
 
 11. In the spot_smaller dataset, how many words are in each title?
     (hint: `\\b`)
+    
+```{r}
+spot_smaller |>
+  mutate(num_title_words = str_count(str_remove(title, " \\(feat.*| \\(with.*"), " ") + 1)
+```
 
 12. In the spot_smaller dataset, extract the first word from every
     title. Show how you would print out these words as a vector and how
@@ -343,6 +354,12 @@ Then this:
 # 8 A.D.H.D                                           A.D.H.D   
 # 9 Ya Estuvo                                         Ya        
 #10 Runnin (with A$AP Rocky, A$AP Ferg & Nicki Minaj) Runnin    
+```
+
+```{r}
+spot_smaller |>
+  mutate(num_title_words = str_count(str_remove(title, " \\(feat.*| \\(with.*"), " ") + 1,
+         first_word = )
 ```
 
 13. Which decades are popular for playlist_names? Using the bigspotify
