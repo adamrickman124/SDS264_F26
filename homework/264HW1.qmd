@@ -12,11 +12,6 @@ You can download this .qmd file from [here](https://github.com/proback/264_fall_
 ### Determinants of COVID vaccination rates
 
 ```{r}
-install.packages("tidyverse")
-install.packages("credentials")
-```
-
-```{r}
 #| include: false
 
 library(tidyverse)
@@ -214,21 +209,29 @@ Here are the hypothetical variables:
 
 # Hypothetical R chunk 1
 temp <- vaccine_data |>
-  mutate(new_perc_vac = ifelse(perc_complete_vac > 95, NA, perc_complete_vac), 
-         MD_group = cut_number(people_per_MD, 3)) |>
-  group_by(MD_group) |>
-  summarise(n = n(),
-            mean_perc_vac = mean(new_perc_vac, na.rm = TRUE),
-            mean_white = mean(perc_white, na.rm = TRUE))
+  mutate(new_perc_vac = ifelse(perc_complete_vac > 95, NA, perc_complete_vac), # adds new column that replaces counties with over 95% vaccinations with NA values
+         MD_group = cut_number(people_per_MD, 3)) |> # makes a new column with 3 groups based on people_per_MD (for low, med, high values)
+  group_by(MD_group) |> # groups by MD_group
+  summarise(n = n(), # new column based on count
+            mean_perc_vac = mean(new_perc_vac, na.rm = TRUE), # new column of the mean of the new perc_vac after removing na values
+            mean_white = mean(perc_white, na.rm = TRUE)) # new column of mean of white percentage after removing na values
 ```  
 
 a) Describe the tibble `temp` created above.  What would be the dimensions?  What do rows and columns represent?
 
+**It would be a 3 x 4 tibble where each row represents counties with low, medium, or high residents per doctor. The first column shows these groups. The second column shows how many counties are in each group, and the third shows the mean percentage of fully vaccinated people among counties in each of these groups (ignoring counties with values of over 95% vaccinated). The fourth column is the mean percentage of white people among counties in each group.**
+
 b) What would happen if we replaced `new_perc_vac = ifelse(perc_complete_vac > 95, NA, perc_complete_vac)` with `new_perc_vac = ifelse(perc_complete_vac > 95, perc_complete_vac, NA)`?
+
+**new_perc_vac would be NA for any county with less than 95% complete vaccinations. This would make the mean_perc_vac in the final tibble very high.**
 
 c) What would happen if we replaced `mean_white = mean(perc_white, na.rm = TRUE)` with `mean_white = mean(perc_white)`?
 
+**If there is a single county with an NA value in perc_white, we risk making the value of mean_white for the entire MD_group that this county is a part of NA.**
+
 d) What would happen if we removed `group_by(MD_group)`?
+
+**It would become a 1 x 3 tibble, counting the total number of counties, and giving the mean vacc. values and white values.**
 
 
 9. Hypothetical R chunk #2:
@@ -273,10 +276,10 @@ c) What would happen if we replaced `fct_reorder(HR_party, perc_over_65, .fun = 
 
 # Hypothetical R chunk 3
 vaccine_data |>
-  filter(!is.na(people_per_MD)) |>
-  mutate(state_lump = fct_lump(state, n = 4)) |>
-  group_by(state_lump, rural_urban_code) |>
-  summarise(mean_people_per_MD = mean(people_per_MD)) |>
+  filter(!is.na(people_per_MD)) |> # filters out data points that are missing people_per_MD values
+  mutate(state_lump = fct_lump(state, n = 4)) |> # creates a column sorting each data point into one of five categories: one of the top four states with the most counties if they are already a part of that state, or an other group if not.
+  group_by(state_lump, rural_urban_code) |> # groups by state_lump and rural_urban_code
+  summarise(mean_people_per_MD = mean(people_per_MD)) |> # mean # of people per md  (by state and rural_urban_code)
   ggplot(mapping = aes(x = rural_urban_code, y = mean_people_per_MD, 
       colour = fct_reorder2(state_lump, rural_urban_code, mean_people_per_MD))) +
     geom_line()
@@ -284,8 +287,16 @@ vaccine_data |>
 
 a) Describe the tibble piped into the ggplot above.  What would be the dimensions?  What do rows and columns represent?
 
+**Assuming all 5 states/group in state_lump contains all 9 rural urban codes, it would be 45 x 3. The first column would be state_lump (4 states with the most counties + other), the next column would be the rural urban code, and the final column would be the mean number of people per doctor for each RUC in each state. Then, each row would be all counties of a specific rural urban code in a state/other group.**
+
 b) Carefully describe the plot created above.
+
+**It will be a line plot with rural_urban_code on the x-axis and the mean number of residents per doctor on the y-axis. Each state/group will have a seperate line and color, and these will be ordered in descending order from their mean residents per doctor for RUC = 9 (the final x-axis value).**
 
 c) What would happen if we removed `filter(!is.na(people_per_MD))`?
 
+**We would have a lot of missing data, as putting a single NA value into a "mean" function makes the entire value NA.**
+
 d) What would happen if we replaced `fct_reorder2(state_lump, rural_urban_code, mean_people_per_MD)` with `state_lump`?
+
+**The states/group will be listed in alphabetical order, which may be confusing as this is not necessarily the most legible way to structure our graph.**
