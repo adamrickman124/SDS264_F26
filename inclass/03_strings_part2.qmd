@@ -357,9 +357,12 @@ Then this:
 ```
 
 ```{r}
-spot_smaller |>
-  mutate(num_title_words = str_count(str_remove(title, " \\(feat.*| \\(with.*"), " ") + 1,
-         first_word = )
+spot_smaller <- spot_smaller |>
+  mutate(first_word = if_else(str_detect(title, " ") == TRUE, str_remove(title, " .*"), title)) |>
+  select(title, first_word)
+
+first_word_vec <- spot_smaller$first_word
+first_word_vec
 ```
 
 13. Which decades are popular for playlist_names? Using the bigspotify
@@ -371,6 +374,15 @@ spot_smaller |>
 -   use count to find how many playlists include each decade
 -   what if you include both "80's" and "80s"?
 -   how can you count "80's" and "80s" together in your final tibble?
+
+```{r}
+bigspotify |>
+  mutate(has_decade = str_detect(playlist_name, "\\d0's|\\d0s"),
+         playlist_decade = ifelse(has_decade == TRUE, parse_number(str_extract(playlist_name, "\\d0's|\\d0s")), NA)) |>
+  filter(has_decade == TRUE) |>
+  count(playlist_decade)
+  # select(track_name, playlist_name, has_decade, playlist_decade)
+```
 
 ## Grouping and backreferences
 
