@@ -78,12 +78,12 @@ str_detect() : useful when working within a tibble
 1.  Identify the input type and output type for each of these examples:
 
 ```{r}
-str_view(spot_smaller$subgenre, "pop") # input: vector and string, output: vector
+# str_view(spot_smaller$subgenre, "pop") # input: vector and string, output: vector
 typeof(str_view(spot_smaller$subgenre, "pop")) # input: vector, output: string
 class(str_view(spot_smaller$subgenre, "pop")) # input: vector, output: string
 
-str_view(spot_smaller$subgenre, "pop", match = NA) # input: string, output: vector
-str_view(spot_smaller$subgenre, "pop", html = TRUE) # input: string, output: list
+# str_view(spot_smaller$subgenre, "pop", match = NA) # input: string, output: vector
+# str_view(spot_smaller$subgenre, "pop", html = TRUE) # input: string, output: list
 
 str_subset(spot_smaller$subgenre, "pop") # input: vector and string, output: vector of strings
 
@@ -161,13 +161,13 @@ bigspotify |>
 ```{r}
 # Guess the output!
 
-str_view(spot_smaller$artist, "^K") # artists starting with a capital K.
+# str_view(spot_smaller$artist, "^K") # artists starting with a capital K.
 
-str_view(spot_smaller$album_release_date, "01$") # albums released on the first of a month
+# str_view(spot_smaller$album_release_date, "01$") # albums released on the first of a month
 
-str_view(spot_smaller$title, "^.. ") # songs starting with any two characters and a space
+# str_view(spot_smaller$title, "^.. ") # songs starting with any two characters and a space
 
-str_view(spot_smaller$artist, "[^A-Za-z ]") # Artists with letters and characters not featured in the uppercase and lowercase alphabets (not including spaces)
+# str_view(spot_smaller$artist, "[^A-Za-z ]") # Artists with letters and characters not featured in the uppercase and lowercase alphabets (not including spaces)
 ```
 
 5.  Given the corpus of common words in stringr::words, create regular
