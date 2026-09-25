@@ -300,7 +300,7 @@ str_subset(words, "^[^aeiou]{3}")
 -   Have two or more vowel-consonant pairs in a row.
 `"([aeiou][^aeiou]){2,}"`
 ```{r}
-str_view(words, "([aeiou][^aeiou]){2,}")
+str_subset(words, "([aeiou][^aeiou]){2,}")
 ```
 
 ## Useful functions for handling patterns
@@ -325,7 +325,7 @@ spot_smaller |>
     
 ```{r}
 spot_smaller |>
-  mutate(num_title_words = str_count(str_remove(title, " \\(feat.*| \\(with.*"), " ") + 1)
+  mutate(num_title_words = str_count(str_remove(title, " \\(feat.*| \\(with.*"), " ") + 1) # since there is a space between every pair of words, the number of spaces will always be one lower than the number of words
 ```
 
 12. In the spot_smaller dataset, extract the first word from every
@@ -357,12 +357,14 @@ Then this:
 ```
 
 ```{r}
-spot_smaller <- spot_smaller |>
+#vector
+first_word_vec = if_else(str_detect(spot_smaller$title, " ") == TRUE, str_remove(spot_smaller$title, " .*"), spot_smaller$title)
+first_word_vec
+
+#tibble
+spot_smaller |>
   mutate(first_word = if_else(str_detect(title, " ") == TRUE, str_remove(title, " .*"), title)) |>
   select(title, first_word)
-
-first_word_vec <- spot_smaller$first_word
-first_word_vec
 ```
 
 13. Which decades are popular for playlist_names? Using the bigspotify
@@ -377,8 +379,9 @@ first_word_vec
 
 ```{r}
 bigspotify |>
-  mutate(has_decade = str_detect(playlist_name, "\\d0's|\\d0s"),
-         playlist_decade = ifelse(has_decade == TRUE, parse_number(str_extract(playlist_name, "\\d0's|\\d0s")), NA)) |>
+  distinct(playlist_name) |>
+  mutate(has_decade = str_detect(playlist_name, "\\d0('?)s"),
+         playlist_decade = ifelse(has_decade == TRUE, parse_number(str_extract(playlist_name, "\\d0('?)s")), NA)) |>
   filter(has_decade == TRUE) |>
   count(playlist_decade) # groups playlist by decade even if spelled differently
   # select(track_name, playlist_name, has_decade, playlist_decade)
@@ -390,10 +393,10 @@ bigspotify |>
 # find all fruits with repeated pair of letters.  
 fruit = stringr::fruit
 fruit
-str_view(fruit, "(..)\\1", match = TRUE)
+# str_view(fruit, "(..)\\1", match = TRUE)
 
 # why does the code below add "pepper" and even "nectarine"?
-str_view(fruit, "(..)(.*)\\1", match = TRUE)
+# str_view(fruit, "(..)(.*)\\1", match = TRUE)
 ```
 
 Tips with backreference:
@@ -405,9 +408,9 @@ Tips with backreference:
 
 ```{r}
 x1 <- c("abxyba", "abccba", "xyaayx", "abxyab", "abcabc")
-str_view(x1, "(.)(.)(..)\\2\\1")
-str_view(x1, "(.)(.)(..)\\1\\2")
-str_view(x1, "(.)(.)(.)\\1\\2\\3")
+# str_view(x1, "(.)(.)(..)\\2\\1")
+# str_view(x1, "(.)(.)(..)\\1\\2")
+# str_view(x1, "(.)(.)(.)\\1\\2\\3")
 ```
 
 14. Describe to your groupmates what these expressions will match, and
@@ -416,6 +419,14 @@ str_view(x1, "(.)(.)(.)\\1\\2\\3")
 -   `"(.)\\1\\1"`
 -   `"(.)(.)(.).*\\3\\2\\1"`
 
+```{r}
+string14a = "helllo"
+str_detect(string14a, "(.)\\1\\1") # detects any string with the same character 3x in a row
+
+string14b = "abc jijosfj cba"
+str_detect(string14b, "(.)(.)(.).*\\3\\2\\1") # detects string where 3 characters appear in order and later in reverse order
+```
+
 Which words in `stringr::words` match each expression?
 
 15. Construct a regular expression to match words in `stringr::words`
@@ -423,31 +434,59 @@ Which words in `stringr::words` match each expression?
     repeated twice) but *not* match repeated pairs of numbers (e.g.
     507-786-3861).
 
+```{r}
+str_subset(stringr::words, "([a-z][a-z]).*\\1")
+```
+
 16. Reformat the album_release_date variable in spot_smaller so that it
     is MM-DD-YYYY instead of YYYY-MM-DD. (Hint: str_replace().)
+    
+```{r}
+bigspotify |>
+  mutate(new_album_release_date = str_replace(track_album_release_date, "(....)-(..)-(..)", "\\2-\\3-\\1")) |>
+  select(track_name, track_album_release_date, new_album_release_date)
+```
 
 17. BEFORE RUNNING IT, explain to your partner(s) what the following R
     chunk will do:
 
 ```{r}
 sentences |> 
-  str_replace("([^ ]+) ([^ ]+) ([^ ]+)", "\\1 \\3 \\2") |> 
+  str_replace("([^ ]+) ([^ ]+) ([^ ]+)", "\\1 \\3 \\2") |> # takes first three words in a sentence and rearranges them in the following order: 1st -> 1st, 2nd -> 3rd, 3rd -> 2nd
   head(5)
 ```
 
 18. Produce an R string which the regular expression represented by `"\\..\\..\\.."` matches.  In other words, find a string `y` below that produces a TRUE in `str_detect`.
 
+```{r}
+str18 = "H.E.L.L.O"
+str_detect(str18, "\\..\\..\\..")
+```
+
 
 19. What words in `stringr::words` have the highest number of vowels? What words have the highest proportion of vowels? (Hint: what is the denominator?)  Figure this out using the tidyverse and piping, starting with `as_tibble(words) |>`.
+
+```{r}
+as_tibble(words) |>
+  mutate(num_vowels = str_count(words, "[aeiou]")) |>
+  arrange(desc(num_vowels)) # so appropriate has the highest number of vowels in "words" (5)
+
+as_tibble(words) |>
+  mutate(num_vowels = str_count(words, "[aeiou]"),
+         num_cons = str_count(words, "[^aeiou]"),
+         prop_vowels = num_vowels/(num_vowels + num_cons)) |>
+  arrange(desc(prop_vowels)) # "a" has the highest proportion (1)
+
+```
 
 
 20. *Carefully* explain what the code below does, both line by line and in general terms.
 
 ```{r}
-temp <- str_replace_all(words, "^([A-Za-z])(.*)([a-z])$", "\\3\\2\\1")
+temp <- str_replace_all(words, "^([A-Za-z])(.*)([a-z])$", "\\3\\2\\1") # swaps first and last letters of a word
 as_tibble(words) |>
-  semi_join(as_tibble(temp)) |>
-  print(n = Inf)
+  semi_join(as_tibble(temp)) |> # joins terms that remain the same after the swap, leaving words that start and end with the same letter as the only remaining data points
+  print(n = Inf) # prints all of these words
 ```
 
 
@@ -483,9 +522,27 @@ user_reviews <- html_text(user_reviews)
 21. `top_reviews` is a character vector containing the 10 most recent critic reviews for Coco, while `user_reviews` is a character vector with the 50 most recent user reviews (although many are truncated).
 
 a) Print out the user reviews where the reviewer mentions "emotion" or "cry".  Think about various forms ("cried", "emotional", etc.)  You may want to turn reviews to all lower case before searching for matches.
+```{r}
+str_subset(str_to_lower(user_reviews), "emotion|emotional|cry|cried|crying")
+```
 
 b) In critic reviews, replace all instances where "Pixar" is used with its full name: "Pixar Animation Studios".
 
+```{r}
+str_replace(top_reviews, "Pixar|pixar", "Pixar Animation Studios")
+```
+
 c) Find out how many times each user uses "I" in their review.  Remember that it could be used as upper or lower case, at the beginning, middle, or end of a sentence, etc.
+```{r}
+str_count(str_to_lower(user_reviews), "i | i\\b| i ")
+```
 
 d) Do critics or users have more complex reviews, as measured by average number of commas used?  Be sure your code weeds out commas used in numbers, such as "12,345".
+
+```{r}
+user_commas = str_count(user_reviews, "[^\\d],[^\\d]")
+mean(user_commas)
+
+critic_commas = str_count(top_reviews, "[^\\d],[^\\d]")
+mean(critic_commas)
+```
