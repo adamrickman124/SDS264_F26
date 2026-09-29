@@ -776,14 +776,73 @@ potter_tidy |>
 
 1. What words contribute the most to negative and positive sentiment scores?  Show a faceted bar plot of the top 10 negative and the top 10 positive words (according to the "bing" lexicon) across the entire series.
 
+```{r}
+potter_tidy |>
+  inner_join(bing_sentiments) |>
+  count(sentiment, word, sort = TRUE) |>
+  group_by(sentiment) |>
+  slice_max(n, n = 10) |>
+  ungroup() |>
+  ggplot(aes(x = fct_reorder(word, n), y = n, fill = sentiment)) +
+    geom_col() +  
+    coord_flip() +
+    facet_wrap(~ sentiment, scales = "free")
+```
 
 2. Find a list of the top 10 words associated with "fear" and with "trust" (according to the "nrc" lexicon) across the entire series.
 
+```{r}
+potter_tidy |>
+  inner_join(get_sentiments("nrc")) |>
+  filter(sentiment == c("trust","fear")) |>
+  count(sentiment, word, sort = TRUE) |>
+  group_by(sentiment) |>
+  slice_max(n, n = 10) |>
+  ungroup() |>
+  ggplot(aes(x = fct_reorder(word, n), y = n, fill = sentiment)) +
+    geom_col() +  
+    coord_flip() +
+    facet_wrap(~ sentiment, scales = "free")
+```
 
 3. Make a wordcloud for the entire series after removing stop words using the "smart" source.
 
+```{r}
+potter_words <- potter_tidy |>
+  anti_join(stop_words) |>
+  count(word) |>
+  filter(word != "NA") |>
+  arrange(desc(n))
+
+# Note: this will look better in html than in the Plots window in RStudio
+wordcloud(
+  words = potter_words$word, 
+  freq = words$n, 
+  max.words = 100, 
+  random.order = FALSE
+)
+```
+
 
 4. Create a wordcloud with the top 20 negative words and the top 20 positive words in the Harry Potter series according to the bing lexicon.  The words should be sized by their respective counts and colored based on whether their sentiment is positive or negative.  (Feel free to be resourceful and creative to color words by a third variable!)
+
+```{r}
+potter_words_sent <- potter_tidy |>
+  inner_join(bing_sentiments) |>
+  count(sentiment, word, sort = TRUE) |>
+  group_by(sentiment) |>
+  slice_max(n, n = 20) |>
+  ungroup()
+
+# Note: this will look better in html than in the Plots window in RStudio
+wordcloud(
+  words = potter_words_sent$word, 
+  freq = potter_words_sent$n, 
+  max.words = 100, 
+  random.order = FALSE,
+  color = sentiment
+)
+```
 
 
 5. Make a faceted bar chart to compare the positive/negative sentiment trajectory over the 7 Harry Potter books.  You should have one bar per chapter (thus chapter becomes the index), and the bar should extend up from 0 if there are more positive than negative words in a chapter (according to the "bing" lexicon), and it will extend down from 0 if there are more negative than positive words.
