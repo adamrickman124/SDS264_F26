@@ -523,26 +523,28 @@ user_reviews <- html_text(user_reviews)
 
 a) Print out the user reviews where the reviewer mentions "emotion" or "cry".  Think about various forms ("cried", "emotional", etc.)  You may want to turn reviews to all lower case before searching for matches.
 ```{r}
-str_subset(str_to_lower(user_reviews), "emotion|emotional|cry|cried|crying")
+#str_subset(str_to_lower(user_reviews), "emotion|emotional|cry|cried|crying")
 ```
 
 b) In critic reviews, replace all instances where "Pixar" is used with its full name: "Pixar Animation Studios".
 
 ```{r}
-str_replace(top_reviews, "Pixar|pixar", "Pixar Animation Studios")
+#str_replace(top_reviews, "Pixar|pixar", "Pixar Animation Studios")
 ```
 
 c) Find out how many times each user uses "I" in their review.  Remember that it could be used as upper or lower case, at the beginning, middle, or end of a sentence, etc.
 ```{r}
-str_count(str_to_lower(user_reviews), "i | i\\b| i ")
+#str_count(str_to_lower(user_reviews), "i | i\\b| i ")
 ```
 
 d) Do critics or users have more complex reviews, as measured by average number of commas used?  Be sure your code weeds out commas used in numbers, such as "12,345".
 
 ```{r}
-user_commas = str_count(user_reviews, "[^\\d],[^\\d]")
-mean(user_commas)
+#user_commas = str_count(user_reviews, "[^\\d],[^\\d]")
+#mean(user_commas) # 3.3
 
-critic_commas = str_count(top_reviews, "[^\\d],[^\\d]")
-mean(critic_commas)
+#critic_commas = str_count(top_reviews, "[^\\d],[^\\d]")
+#mean(critic_commas) # 2.2
 ```
+
+**Then users have more complex reviews by number of commas used, with a mean of 3.3 as opposed to the critics' mean of 2.2.**
