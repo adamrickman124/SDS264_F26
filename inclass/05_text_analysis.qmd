@@ -781,7 +781,7 @@ potter_tidy |>
   inner_join(bing_sentiments) |>
   count(sentiment, word, sort = TRUE) |>
   group_by(sentiment) |>
-  slice_max(n, n = 10) |>
+  top_n(10) |>
   ungroup() |>
   ggplot(aes(x = fct_reorder(word, n), y = n, fill = sentiment)) +
     geom_col() +  
@@ -829,9 +829,11 @@ wordcloud(
 ```{r}
 potter_words_sent <- potter_tidy |>
   inner_join(bing_sentiments) |>
+  anti_join(stop_words) |>
   count(sentiment, word, sort = TRUE) |>
   group_by(sentiment) |>
   slice_max(n, n = 20) |>
+  mutate(sent_colors = if_else(sentiment == "positive", "blue", "red")) |>
   ungroup()
 
 # Note: this will look better in html than in the Plots window in RStudio
@@ -840,16 +842,54 @@ wordcloud(
   freq = potter_words_sent$n, 
   max.words = 100, 
   random.order = FALSE,
-  color = sentiment
+  colors = potter_words_sent$sent_colors,
+  ordered.colors = TRUE # no clue why this works but it does #win
 )
 ```
 
 
 5. Make a faceted bar chart to compare the positive/negative sentiment trajectory over the 7 Harry Potter books.  You should have one bar per chapter (thus chapter becomes the index), and the bar should extend up from 0 if there are more positive than negative words in a chapter (according to the "bing" lexicon), and it will extend down from 0 if there are more negative than positive words.
 
+```{r}
+potter_tidy |>
+  # anti_join(stop_words) |>
+  inner_join(bing_sentiments) |>
+  group_by(title, chapter) |>
+  summarize(
+    num_pos = sum(sentiment == "positive"),
+    num_neg = sum(sentiment == "negative"),
+    net_sentiment = num_pos - num_neg) |>
+  ggplot(aes(x = chapter, y = net_sentiment, fill = title)) +
+    geom_col(show.legend = FALSE) +
+    facet_wrap(~title, scales = "free_x")
+```
+
 
 6. Repeat (5) using a faceted scatterplot to show the average sentiment score according to the "afinn" lexicon for each chapter.  (Hint: use `mutate(chapter_factor = factor(chapter))` to treat chapter as a factor variable.)
 
+```{r}
+potter_tidy |>
+  # anti_join(stop_words) |>
+  inner_join(get_sentiments("afinn")) |>
+  group_by(title, chapter) |>
+  summarize(
+    pos = sum(value > 0),
+    neg = sum(value < 0),
+    net_sentiment = pos + neg) |>
+  ggplot(aes(x = chapter, y = net_sentiment, color = title)) +
+    geom_point(show.legend = FALSE) +
+    facet_wrap(~title, scales = "free_x")
+
+potter_tidy |>
+  # anti_join(stop_words) |>
+  inner_join(get_sentiments("afinn")) |>
+  group_by(title, chapter) |>
+  summarize(net_sentiment = sum(value)) |>
+  ggplot(aes(x = chapter, y = net_sentiment, color = title)) +
+    geom_point(show.legend = FALSE) +
+    geom_hline(yintercept = 0, alpha = 0.5) +
+    facet_wrap(~title, scales = "free_x")
+```
 
 7. Make a faceted bar plot showing the top 10 words that distinguish each book according to the tf-idf statistic.
 
