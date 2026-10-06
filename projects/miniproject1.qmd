@@ -1,5 +1,32 @@
 ---
 title: "miniproject1"
 format: html
+editor_options: 
+  chunk_output_type: console
 ---
 
+```{r}
+kidz_bop_raw <- read_csv("~/SDS264_F26/projects/KB_censored-lyrics.csv")
+
+kidz_bop <- kidz_bop_raw |>
+  select(ogArtist, songName, badword, count, category, year, ogLyric, kbLyric)
+```
+
+
+```{r}
+kidz_bop |> # number/proportion of verses that are cut entirely rather than reworded (by category)
+  mutate(cut_line = if_else(kbLyric == "cuts verse", TRUE, FALSE)) |>
+  group_by(year, category) |>
+  summarize(n = n(),
+            num_cut = sum(cut_line),
+            prop_cut = mean(cut_line)) |>
+  arrange(year) |>
+  ggplot(aes(x = year, y = prop_cut, color = category)) +
+    geom_point() +
+    geom_smooth(se = FALSE) +
+    facet_wrap(~category)
+```
+
+```{r}
+
+```
