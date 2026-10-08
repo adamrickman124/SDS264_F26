@@ -9,7 +9,7 @@ editor_options:
 kidz_bop_raw <- read_csv("~/SDS264_F26/projects/KB_censored-lyrics.csv")
 
 kidz_bop <- kidz_bop_raw |>
-  select(ogArtist, songName, badword, count, category, year, ogLyric, kbLyric)
+  select(ogArtist, songName, badword, count, category, year, ogLyric, kbLyric) |>
 ```
 
 
@@ -28,5 +28,54 @@ kidz_bop |> # number/proportion of verses that are cut entirely rather than rewo
 ```
 
 ```{r}
+top_artists <- kidz_bop |>
+  mutate(ogArtist = str_replace_all(ogArtist, ", | & ", "|")) |>
+  separate_rows(ogArtist, sep = "\\|") |>
+  count(ogArtist) |>
+  slice_max(order_by = n, n = 10)
 
+kidz_bop |> # artist x axis
+  mutate(ogArtist = str_replace_all(ogArtist, ", | & ", "|")) |>
+  separate_rows(ogArtist, sep = "\\|") |>
+  filter(ogArtist %in% top_artists$ogArtist) |>
+  ggplot(aes(x = ogArtist, fill = ogArtist)) +
+    geom_bar() +
+    facet_wrap(~category) +
+    labs(
+      x = "",
+      y = "# of Censored Lines",
+      fill = "Artist",
+      title = "Number of "
+    ) +
+    theme(axis.text.x = element_blank())
+
+kidz_bop |> # category x axis
+  mutate(ogArtist = str_replace_all(ogArtist, ", | & ", "|")) |>
+  separate_rows(ogArtist, sep = "\\|") |>
+  filter(ogArtist %in% top_artists$ogArtist) |>
+  ggplot(aes(x = category, fill = ogArtist)) +
+    geom_bar() +
+    labs(
+      x = "Category",
+      y = "# of Censored Lines",
+      fill = "Artist",
+      title = "Number of Censored Lines by Category and Artist"
+    )
+```
+
+```{r}
+kidz_bop |>
+  group_by(songName) |>
+  summarize(lines_censored = n())
+```
+
+```{r}
+test_bop <- kidz_bop |>
+  mutate(cut_line = if_else(kbLyric == "cuts verse", TRUE, FALSE)) |>
+  filter(cut_line == FALSE) |>
+  mutate(remains_same = ,
+         index = ) |>
+  str_sub(remains_same, 1, i)
+         #replaced = 
+         #replacement = )
 ```
