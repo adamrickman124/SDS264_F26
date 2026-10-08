@@ -64,12 +64,31 @@ kidz_bop |> # category x axis
 ```
 
 ```{r}
-kidz_bop |>
-  group_by(songName) |>
+temp_censored_songz <- kidz_bop |>
+  mutate(ogArtist = str_replace_all(ogArtist, ", | & ", "|")) |>
+  separate_rows(ogArtist, sep = "\\|") |>
+  group_by(ogArtist, songName) |>
   summarize(lines_censored = n())
+
+censored_songz <- temp_censored_songz |>
+  group_by(ogArtist) |>
+  summarize(mean_lines_censored = mean(lines_censored)) |>
+  arrange(mean_lines_censored)
+
+ggplot() +
+  geom_line(data = censored_songz, mapping = aes(x = fct_reorder(ogArtist, mean_lines_censored), y = mean_lines_censored, group = 1)) +
+  geom_point(data = temp_censored_songz, mapping = aes(x = ogArtist, y = lines_censored), alpha = 0.2) +
+  theme(axis.text.x = element_blank()) +
+  labs(
+    x = "Artist (ordered by mean lines censored)",
+    y = "# Lines Censored",
+    title = "Lines Censored per Song",
+    subtitle = "Each individual point in an artist's column represents a song by that artist"
+  )
 ```
 
 ```{r}
+eval: FALSE
 test_bop <- kidz_bop |>
   mutate(cut_line = if_else(kbLyric == "cuts verse", TRUE, FALSE)) |>
   filter(cut_line == FALSE) |>
