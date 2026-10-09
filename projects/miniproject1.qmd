@@ -1,33 +1,46 @@
 ---
-title: "miniproject1"
+title: "Mini-Project 1"
+author: "Adam Rickman"
 format: html
 editor_options: 
   chunk_output_type: console
 ---
 
+# An Analysis of Kidz Bop Censorship
+
+## What is our data?
+
+We will be using a data set comprised of lines of music that differ between the original song and the Kidz Bop cover of that song. Each row consists of the offending line, its Kidz Bop replacement, the offending word and its category (drugs, profanity, etc.), the original artist, song, and release date.
+
+Using this data, I want to examine what category of word is most often censored or even cut, and general trends in artist censorship. Which artists have been censored the most, and is there a significant difference between these artists and artists with lower censorship? Additionally, using the "afinn" sentiments, I will examine any shifts in positive or negative sentiments between the original song lyrics and the new Kidz Bop version.
+
 ```{r}
+#| include: FALSE
+
+library(tidyverse)
+library(tidytext)
+library(textdata)
+library(wordcloud)
+library(wordcloud2)
+library(viridis)
+library(ggthemes)
+library(gutenbergr)
+```
+
+```{r}
+#| include: FALSE
 kidz_bop_raw <- read_csv("~/SDS264_F26/projects/KB_censored-lyrics.csv")
 
 kidz_bop <- kidz_bop_raw |>
-  select(ogArtist, songName, badword, count, category, year, ogLyric, kbLyric) |>
+  select(ogArtist, songName, badword, count, category, year, ogLyric, kbLyric)
 ```
 
+## Which artists are most censored?
+
+We first want to examine the most censored artists and what they are often most censored for. Cutting our data set to only the 10 artists with the highest number of censored lines (ensuring that songs with multiple artists are separated), we will plot the number of censored lines that each artist has in relation to the category of the offending word.
 
 ```{r}
-kidz_bop |> # number/proportion of verses that are cut entirely rather than reworded (by category)
-  mutate(cut_line = if_else(kbLyric == "cuts verse", TRUE, FALSE)) |>
-  group_by(year, category) |>
-  summarize(n = n(),
-            num_cut = sum(cut_line),
-            prop_cut = mean(cut_line)) |>
-  arrange(year) |>
-  ggplot(aes(x = year, y = prop_cut, color = category)) +
-    geom_point() +
-    geom_smooth(se = FALSE) +
-    facet_wrap(~category)
-```
-
-```{r}
+#| echo: FALSE
 top_artists <- kidz_bop |>
   mutate(ogArtist = str_replace_all(ogArtist, ", | & ", "|")) |>
   separate_rows(ogArtist, sep = "\\|") |>
@@ -44,11 +57,16 @@ kidz_bop |> # artist x axis
     labs(
       x = "",
       y = "# of Censored Lines",
-      fill = "Artist",
-      title = "Number of "
+      fill = "Original Artist",
+      title = "Number of Censored Lines by Category and Artist"
     ) +
     theme(axis.text.x = element_blank())
+```
 
+From this, we can gauge that the most censored artists are primarily censored for lyrics focusing on drugs, sex, and profanity, where as not many of these lines are censored for violence, identity, or other offending words. It is also important to note that some artists have very high values in some categories, while very low values in other. For example, we can see that Macklemore and Ryan Lewis have extremely high values in profanity, but almost nothing in every other category.
+
+```{r}
+#| include: FALSE
 kidz_bop |> # category x axis
   mutate(ogArtist = str_replace_all(ogArtist, ", | & ", "|")) |>
   separate_rows(ogArtist, sep = "\\|") |>
@@ -63,7 +81,9 @@ kidz_bop |> # category x axis
     )
 ```
 
+Now that we've examined the most censored artists, I want to examine the general trend of much artists are censored overall. To do this, we will count up the number of censored lines in each song and take the mean number of censored lines per song by artist. We will then order the artists by this mean value.
 ```{r}
+#| echo: FALSE
 temp_censored_songz <- kidz_bop |>
   mutate(ogArtist = str_replace_all(ogArtist, ", | & ", "|")) |>
   separate_rows(ogArtist, sep = "\\|") |>
@@ -87,14 +107,76 @@ ggplot() +
   )
 ```
 
+Examining this graph, we see that there is an exponential trend. Artists have relatively low mean number of censors per song, until it spikes up on the right side of the graph. This implies that most artists that Kidz Bop chooses to cover may only have a few lines per song that need to be censored, but there are a select few that need substantative rewording.
+
+## Which categories of lines are cut instead of reworded?
+
+In the Kidz Bop data set, some of the original song's lines had been cut entirely upon their adaptation to Kidz Bop. I want to determine which categories this most often occurs for, and whether the decision to cut lines has been modified over time. The plot below shows the proportions of lines cut by year and category, from which we can draw conclusions.
+
 ```{r}
-eval: FALSE
-test_bop <- kidz_bop |>
+#| echo: FALSE
+kidz_bop |> # number/proportion of verses that are cut entirely rather than reworded (by category)
   mutate(cut_line = if_else(kbLyric == "cuts verse", TRUE, FALSE)) |>
-  filter(cut_line == FALSE) |>
-  mutate(remains_same = ,
-         index = ) |>
-  str_sub(remains_same, 1, i)
-         #replaced = 
-         #replacement = )
+  group_by(year, category) |>
+  summarize(n = n(),
+            num_cut = sum(cut_line),
+            prop_cut = mean(cut_line)) |>
+  arrange(year) |>
+  ggplot(aes(x = year, y = prop_cut, color = category)) +
+    geom_point(alpha = 0.4, show.legend = FALSE) +
+    geom_smooth(se = FALSE, show.legend = FALSE) +
+    facet_wrap(~category) +
+    labs(
+      x = "Year released",
+      y = "Proportion of lines cut",
+      title = "Proportion of lines cut by category of offending word over time"
+    ) +
+    theme_calc()
 ```
+As we can see, profanity and violence have remained relatively consistent, with ~25% of their lines being cut throughout the years. Lines that reference drugs and sex have had a noticeable decline in proportion of lines cut, to the point where the most modern dates end at a similar proportion to profanity and violence. Identity has had a sharp decline in the most recent years, and the other category has risen steadily. These results might suggest shifts in priorities, or a willingness to replace lines about drugs and sex rather than cut them all together.
+
+## How does sentiment differ between original lyrics and Kidz Bop lyrics?
+
+We want to examine the difference in sentiments between the original lyrics and the Kidz Bop lyrics, which we do by splitting each censored line into its individual words and joining them with afinn sentiments, which we can then plot below.
+```{r}
+#| echo: FALSE
+ogwordz <- kidz_bop |>
+  separate_rows(ogLyric, sep = "\\s") |>
+  mutate(ogLyric = str_remove_all(str_to_lower(ogLyric), "[,\\.!\\?\\(\\)\"'“”]")) |>
+  inner_join(get_sentiments("afinn"), by = c("ogLyric" = "word")) |>
+  select(-kbLyric)
+
+ogwordz_sent <- ogwordz |>
+  group_by(value) |>
+  summarize(n = n()) |>
+  mutate(version = "Original")
+
+kbwordz <- kidz_bop |>
+  separate_rows(kbLyric, sep = "\\s") |>
+  mutate(kbLyric = str_remove(str_to_lower(kbLyric), "[,\\.!\\?\\(\\)\"'“”]")) |>
+  inner_join(get_sentiments("afinn"), by = c("kbLyric" = "word")) |>
+  select(-ogLyric)
+
+kbwordz_sent <- kbwordz |>
+  group_by(value) |>
+  summarize(n = n()) |>
+  mutate(version = "Kidz Bop")
+
+full_sent <- bind_rows(ogwordz_sent, kbwordz_sent)
+
+ggplot(full_sent, aes(x = value, y = n, fill = version)) +
+  geom_col() +
+  facet_wrap(~version) +
+  labs(
+    x = "afinn Sentiment value",
+    y = "# of Words",
+    fill = "Version",
+    title = "Number of Words per afinn Sentiment value"
+  ) +
+  theme_calc()
+```
+As we can see, where the original lyrics have some words down at -4 or -5, Kidz Bop replaces most severely negative words with less words that are less negative. This results in a spike in Kidz Bop lyrics at -1. One interesting thing to note is that the original lyrics have more positive associations that the Kidz Bop lyrics. This seems to be because words like "kiss" or "God", which are words with positive associations, are censored regardless.
+
+## Conclusion
+
+From our analysis, we can gather that the top artists censored have far more censored lines than the average artist. The data also suggests that the proportion of lines that are cut entirely may be based on the category of the offending word. Finally, we learned that, while the original lyrics have very negative sentiments and some positive sentiments, the Kidz Bop lyrics have a high amount of slightly negative sentiments and a slightly lower amount of positive sentiments.
