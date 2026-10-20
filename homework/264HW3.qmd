@@ -216,3 +216,118 @@ party_age |>
     geom_label_repel(aes(label = partyid)) +
     labs(title = "Mean vs SD")
 ```
+
+## Pause to Ponders
+```{r}
+df <- tibble(
+  a = rnorm(10),
+  b = rnorm(10),
+  c = rnorm(10),
+  d = rnorm(10)
+)
+df$a[5] = NA
+df
+
+rescale_basic <- function(x) {
+  (x - min(x)) / (max(x) - min(x))
+}
+
+df |>
+  filter(!is.na(a)) |>
+  mutate(new_a = rescale_basic(a))
+```
+
+**[Pause to Ponder:]** Do you notice anything in the output above that gives you pause?
+
+```{r}
+# Create function to calculate weighted mean
+wt_mean <- function(x, w) {
+  sum(x * w) / sum(w)
+}
+wt_mean(c(1, 10), c(1/3, 2/3))
+wt_mean(1:6, 1:3)
+```
+
+**[Pause to Ponder:]** Why is the answer to the last call above 7.67?  Aren't we taking a weighted mean of 1-6, all of which are below 7?
+
+```{r}
+#| error: TRUE
+
+# update function to handle cases where data and weights of unequal length
+wt_mean <- function(x, w) {
+  if (length(x) != length(w)) {
+    stop("`x` and `w` must be the same length", call. = FALSE)
+  } else {
+  sum(w * x) / sum(w)
+  }  
+}
+wt_mean(1:6, 1:3) 
+# should produce an error now if weights and data different lengths
+#  - nice example of if and else
+```
+
+**[Pause to Ponder:]** What does the `call.` option do?
+
+```{r}
+#| error: TRUE
+
+rescale_w_error <- function(x) {
+  if (is.na(sum(x))) {
+    stop("`x` cannot have NAs", call. = FALSE)
+  } else {
+    (x - min(x)) / (max(x) - min(x))
+  }  
+}
+
+temp <- c(4, 6, 8, 9)
+rescale_w_error(temp)
+
+temp <- c(4, 6, 8, 9, NA)
+rescale_w_error(temp)
+```
+
+**[Pause to Ponder:]** Why can't we just use `if (is.na(x))` instead of `is.na(sum(x))`?
+
+**[Pause to Ponder:]** Predict what the code below will do, and (only) then run it to check.  Think about: why do we have `sort = sort`?  why not embrace `df`? why didn't we need `n` in the arguments?
+
+```{r}
+#| eval: FALSE
+
+new_function <- function(df, var, condition, sort = TRUE) {
+  df |>
+    filter({{ condition }}) |>
+    count({{ var }}, sort = sort) |>
+    mutate(prop = n / sum(n))
+}
+
+mpg |> new_function(var = manufacturer, 
+                    condition = manufacturer %in% c("audi", 
+                                                    "honda", 
+                                                    "hyundai", 
+                                                    "nissan", 
+                                                    "subaru", 
+                                                    "toyota", 
+                                                    "volkswagen")
+                    )
+```
+
+**[Pause to Ponder:]** Here's another nice use of `pick()`.  Predict what the function will do, then run the code to see if you are correct.
+
+```{r}
+#| eval: FALSE
+
+# Source: https://twitter.com/pollicipes/status/1571606508944719876
+new_function <- function(data, rows, cols) {
+  data |> 
+    count(pick(c({{ rows }}, {{ cols }}))) |> 
+    pivot_wider(
+      names_from = {{ cols }}, 
+      values_from = n,
+      names_sort = TRUE,
+      values_fill = 0
+    )
+}
+
+mpg |> new_function(c(manufacturer, model), cyl)
+```
+
