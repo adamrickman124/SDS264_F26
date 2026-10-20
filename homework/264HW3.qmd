@@ -1,6 +1,8 @@
 ---
 title: "264HW3"
 format: html
+editor_options: 
+  chunk_output_type: console
 ---
 
 1. Rewrite this code snippet as a function: `x / sum(x, na.rm = TRUE)`.  This code creates weights which sum to 1, where NA values are ignored. Test it for at least two different vectors. (Make sure at least one has NAs!)
@@ -193,6 +195,29 @@ foo1mod(test11x)
 
 
 13. Modify the `summary6()` function from earlier to add an argument that gives the user an option to remove missing values, if any exist.  Show that your function works for (a) the `hwy` variable in `mpg_tbl <- as_tibble(mpg)`, and (b) the `age` variable in `gss_cat`.
+
+```{r}
+summary6 <- function(data, var, narm = TRUE) {
+  data |> summarize(
+    mean = mean({{ var }}, na.rm = narm),
+    median = median({{ var }}, na.rm = narm),
+    sd = sd({{ var }}, na.rm = narm),
+    IQR = IQR({{ var }}, na.rm = TRUE),
+    n = n(),
+    n_miss = sum(is.na({{ var }})),
+    .groups = "drop"    # to leave the data in an ungrouped state
+  )
+}
+
+mpg |>
+  summary6(hwy)
+
+gss_cat |>
+  summary6(age, FALSE)
+
+gss_cat |>
+  summary6(age)
+```
 
 
 14. Add an argument to (13) to produce summary statistics by group for a second variable (you should now have 4 possible inputs to your function).  Show that your function works for (a) the `hwy` variable in `mpg_tbl <- as_tibble(mpg)` grouped by `drv`, and (b) the `age` variable in `gss_cat` grouped by `partyid`.
