@@ -32,6 +32,7 @@ A good rule of thumb is to consider writing a function whenever you’ve copied 
 # Initial packages required (we'll be adding more)
 library(tidyverse)
 library(nycflights13)
+library(dplyr)
 ```
 
 
@@ -659,6 +660,7 @@ both_na(test6x2, test6y2)
 ```{r}
 both_na <- function(x, y) {
   if(length(x) != length(y)) {
+    # stop("vectors have different lengths")
     minval <- min(length(x), length(y))
     x <- x[1:minval]
     y <- y[1:minval]
@@ -677,11 +679,8 @@ both_na(test_x, test_y)
 8. Here is a way to get `not_cancelled` flights in the flights dataset:
 
 ```{r}
-flights <- nycflights13::flights
-
-
 not_cancelled <- flights |> 
-  filter(!is.na(dep_delay), !is.na(arr_delay))
+  dplyr::filter(!is.na(dep_delay), !is.na(arr_delay))
 ```
 
 Is it necessary to check is.na for both departure and arrival? Using summarize, find the number of flights missing departure delay, arrival delay, and both. (Use your new function!)
@@ -689,14 +688,12 @@ Is it necessary to check is.na for both departure and arrival? Using summarize, 
 ```{r}
 flights |>
   select(dep_delay, arr_delay) |>
-  mutate(
-    missing_dep_delay = is.na(dep_delay),
-    missing_arr_delay = is.na(arr_delay)
-  ) |>
-  summarize(dep = sum(missing_dep_delay),
-            arr = sum(missing_arr_delay),
+  summarize(missing_dep = sum(is.na(dep_delay)),
+            missing_arr = sum(is.na(arr_delay)),
             n_missing_both = both_na(dep_delay, arr_delay))
 ```
+
+**So we see that every flight missing a departure delay is also missing an arrival delay.**
 
 
 9. Read the code for each of the following three functions, puzzle out what they do, and then brainstorm better names.
@@ -704,7 +701,7 @@ flights |>
 ```{r}
 #| eval: FALSE
 
-f1 <- function(time1, time2) {
+f1 <- function(time1, time2) { # BETTER NAME: minute_difference
   hour1 <- time1 %/% 100 # removes digits in the 100s or greater
   min1 <- time1 %% 100 # removes the 10s and 1s digits
   hour2 <- time2 %/% 100 # same for time 2
@@ -714,14 +711,14 @@ f1 <- function(time1, time2) {
 }
 
 
-f2 <- function(lengthcm, widthcm) {
-  (lengthcm / 2.54) * (widthcm / 2.54) #
+f2 <- function(lengthcm, widthcm) { # BETTER NAME: sqinch_area
+  (lengthcm / 2.54) * (widthcm / 2.54) # takes the length and width (in cm) and converts it to a square inch area
 }
 
 
-f3 <- function(x) {
+f3 <- function(x) { # BETTER NAME: collapse_non_answer
   fct_collapse(x, "non answer" = c("No answer", "Refused", 
-                                   "Don't know", "Not applicable"))
+                                   "Don't know", "Not applicable")) # collapses non answers into one column
 }
 
 ```
@@ -731,13 +728,32 @@ f3 <- function(x) {
 
 ```{r}
 foo1 <- function(x) {
-  diff <- x[-1] - x[1:(length(x) - 1)]
-  sum(diff < 0)
+  diff <- x[-1] - x[1:(length(x) - 1)] # `diff` is a vector of length (length(x) - 1) where x[-1] is vector x without the first value and x[1:length(x)-1] is x without the last value
+  sum(diff < 0) # returns a count of how many values in diff are less than 0.
 }
+test10x1 <- c(1,4,3,2) # should return 2
+test10x2 <- c(1,1,1,5) # should return 0
+test10x3 <- c(-5, 100, -1) # should return 1
+foo1(test10x1)
+foo1(test10x2)
+foo1(test10x3)
 ```
 
 
 11. The `foo1()` function doesn't perform well if a vector has missing values.  Amend `foo1()` so that it produces a helpful error message and stops if there are any missing values in the input vector.  Show that it works with appropriately chosen vectors `x`.  Be sure you add `error = TRUE` to your R chunk, or else knitting will fail!
+```{r}
+#| error: TRUE
+foo1mod <- function(x) {
+  if (sum(is.na(x) > 0)) {
+    stop("vector x contains NA values")
+  }
+  diff <- x[-1] - x[1:(length(x) - 1)]
+  sum(diff < 0)
+}
+
+test11x <- c(2, 1, NA, 5)
+foo1mod(test11x)
+```
 
 
 12. Write a function called `greet` using `if`, `else if`, and `else` to print out "good morning" if it's before 12 PM, "good afternoon" if it's between 12 PM and 5 PM, and "good evening" if it's after 5 PM.  Your function should work if you input a time like: `greet(time = "2018-05-03 17:38:01 CDT")` or if you input the current time with `greet(time = Sys.time())`.  [Hint: check out the `hour` function in the `lubridate` package]
