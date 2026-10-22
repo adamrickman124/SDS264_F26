@@ -137,6 +137,8 @@ while (nheads < 3) {
 flips
 ```
 
+**It flips a coin until it is heads 3 times in a row and then gives the number of flips that was needed until this happened**
+
 
 ## Using iteration for simulation
 
@@ -497,6 +499,26 @@ You could then save your result using `write_csv` so you don't have to run the r
 ## On Your Own
 
 1. Compute the mean of every column of the `mtcars` data set using (a) a for loop, (b) a `map` function, (c) the across() function, and (d) pivot_longer().
+
+```{r}
+# for loop
+mean1 <- vector("double", ncol(mtcars))
+for (i in seq_along(mtcars)) {
+  mean1[[i]] = mean(mtcars[[i]])
+}
+mean1
+
+# map
+mean2 <- map_dbl(mtcars, mean)
+mean2
+
+# across()
+mean3 <- mtcars |>
+  summarize(across(everything(), mean))
+mean3
+
+# pivot_longer()
+```
 
 
 2. Write a function that prints the mean of each *numeric* column in a data frame.  Try it on the `iris` data set. (Hint: `keep(is.numeric)`)
