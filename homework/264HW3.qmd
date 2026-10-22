@@ -12,8 +12,10 @@ make_weights <- function(x) {
   x /sum(x, na.rm = TRUE)
 }
 
-test <- c(0, 1, 3, NA)
-make_weights(test)
+test1x1 <- c(0, 1, 3, NA)
+make_weights(test1x1)
+test1x2 <- c(NA, NA, NA, NA, 2, 3, NA)
+make_weights(test1x2)
 ```
 
 
@@ -24,11 +26,11 @@ se <- function(x) {
   sqrt(var(x)/length(x))
 }
 
-test2a <- c(1:5)
-se(test2a)
+test2x1 <- c(1:5)
+se(test2x1)
 
-test2b <- c(1, 3, 5, 7)
-se(test2b)
+test2x2 <- c(1, 3, 5, 7)
+se(test2x2)
 ```
 
 
@@ -193,6 +195,23 @@ foo1mod(test11x)
 
 12. Write a function called `greet` using `if`, `else if`, and `else` to print out "good morning" if it's before 12 PM, "good afternoon" if it's between 12 PM and 5 PM, and "good evening" if it's after 5 PM.  Your function should work if you input a time like: `greet(time = "2018-05-03 17:38:01 CDT")` or if you input the current time with `greet(time = Sys.time())`.  [Hint: check out the `hour` function in the `lubridate` package]
 
+```{r}
+greet <- function(time = Sys.time()) {
+  hour_now <- hour(time)
+  if (hour_now < 12) {
+    print("Good Morning!")
+  } else if (hour_now < 18) {
+    print("Good Afternoon!")
+  } else {
+    print("Good Evening!")
+  }
+}
+
+greet()
+greet("2026-10-10 11:38:08 CDT")
+greet("2026-10-10 17:38:08 CDT")
+greet("2026-10-10 21:38:08 CDT")
+```
 
 13. Modify the `summary6()` function from earlier to add an argument that gives the user an option to remove missing values, if any exist.  Show that your function works for (a) the `hwy` variable in `mpg_tbl <- as_tibble(mpg)`, and (b) the `age` variable in `gss_cat`.
 
@@ -222,8 +241,41 @@ gss_cat |>
 
 14. Add an argument to (13) to produce summary statistics by group for a second variable (you should now have 4 possible inputs to your function).  Show that your function works for (a) the `hwy` variable in `mpg_tbl <- as_tibble(mpg)` grouped by `drv`, and (b) the `age` variable in `gss_cat` grouped by `partyid`.
 
+```{r}
+summary6 <- function(data, var, gvar, narm = TRUE) {
+  data |> 
+    group_by({{ gvar }}) |>
+    summarize(
+    mean = mean({{ var }}, na.rm = narm),
+    median = median({{ var }}, na.rm = narm),
+    sd = sd({{ var }}, na.rm = narm),
+    IQR = IQR({{ var }}, na.rm = TRUE),
+    n = n(),
+    n_miss = sum(is.na({{ var }})),
+    .groups = "drop"    # to leave the data in an ungrouped state
+  )
+}
+
+mpg |>
+  summary6(hwy, drv)
+
+party_age <- gss_cat |>
+  summary6(age, partyid)
+```
+
 
 15. Create a function that has a vector as the input and returns the last value. (Note: Be sure to use a name that does not write over an existing function!)
+
+```{r}
+get_last_value <- function(x) {
+  x[length(x)]
+}
+
+test15x1 <- c(1,2,4,6,9)
+get_last_value(test15x1)
+test15x2 <- c(1,5,NA)
+get_last_value(test15x2)
+```
 
 
 16. Save your final table from (14) and write a function to draw a scatterplot of a measure of center (mean or median - user can choose) vs. a measure of spread (sd or IQR - user can choose), with points sized by sample size, to see if there is constant variance.  Each point should be labeled with partyid, and the plot title should reflect the variables chosen by the user.
@@ -232,6 +284,24 @@ Hint: start with a ggplot with no user input, and then functionize:
 
 ```{r}
 #| eval: FALSE
+
+library(ggrepel)
+
+check_equal_var <- function(data, center, spread, label) {
+  title16 <- rlang::englue("Plot of {{center}} and {{spread}}")
+  data |>
+    ggplot(aes(x = {{ center }}, y = {{ spread }})) +
+    geom_point(aes(size = n)) +
+    geom_smooth(method = lm) +
+    geom_label_repel(aes(label = {{ label }})) +
+    labs(title = title16)
+}
+
+check_equal_var(party_age, median, IQR, partyid)
+```
+
+```{r}
+#| include: FALSE
 
 library(ggrepel)
 party_age |>
