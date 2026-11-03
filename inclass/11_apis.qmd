@@ -438,5 +438,33 @@ ggplot(data = hennepin_tidycensus) +
 
 2. Adapt the code in `hennepin_tidycensus` to write a function called `MN_tract_data` to give the user choices about year, county, and variables to pull off.  Show that `MN_tract_data(year = 2021, county = "Hennepin", variables = c("B01003_001", "B19013_001"))` works as expected.  Make sure it also works for other years, counties, and variables (e.g. B25077_001 is median home price and B02001_002 is number of white residents).
 
+```{r}
+MN_tract_data <- function(year, county, variables) {
+  tidycensus::get_acs(
+    key = census_api_key,
+    state = "MN",
+    year = year,
+    geography = "tract",
+    geometry = TRUE,
+    county = county,
+    variables = {{ variables }},
+    show_call = TRUE,
+    output = "wide"
+  ) |>
+  mutate(year = year)
+}
+
+MN_tract_data(2021, "Hennepin", variables = c("B01003_001", "B19013_001"))
+```
+
 
 3. Use your function from (2) along with `map` and `list_rbind` to build a data set for Rice county for the years 2019-2021.  Use your scraped data to plot trends in income over time and population over time.
+
+```{r}
+multitibble <- map(c(2019, 2020, 2021), MN_tract_data, county = "Rice", variables = c("B01003_001", "B19013_001"))
+
+final_census_tibble <- list_rbind(multitibble)
+
+final_census_tibble
+
+```
